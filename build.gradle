@@ -1,0 +1,82 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+plugins {
+    id 'application'
+    id 'checkstyle'
+    id 'jacoco'
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
+}
+
+group 'org.hyperledger.fabric.samples'
+version '1.0-SNAPSHOT'
+
+mainClassName='org.hyperledger.fabric.samples.FabcarClient'
+
+repositories {
+    jcenter()
+    
+    maven {
+        url 'https://nexus.hyperledger.org/content/repositories/snapshots/'
+    }
+    
+    maven {
+        url 'https://oss.sonatype.org/content/repositories/snapshots/'
+    }
+}
+
+dependencies {
+    implementation 'org.hyperledger.fabric:fabric-gateway-java:2.2.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.3'
+    compileOnly 'com.github.jengelman.gradle.plugins:shadow:6.1.0'
+    testImplementation 'junit:junit:4.12'
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'java'
+
+checkstyle {
+    toolVersion '8.21'
+    configFile file("config/checkstyle/checkstyle.xml")
+}
+
+checkstyleMain {
+    source ='src/main/java'
+}
+
+checkstyleTest {
+    source ='src/test/java'
+}
+
+shadowJar {
+   archiveBaseName.set('fabcar')
+   archiveClassifier.set('')
+   archiveVersion.set('')
+}
+
+jacocoTestReport {
+    dependsOn test
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 1.0
+            }
+        }
+    }
+
+    finalizedBy jacocoTestReport
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
+
+check.dependsOn jacocoTestCoverageVerification
+installDist.dependsOn check
